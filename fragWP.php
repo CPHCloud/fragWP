@@ -184,7 +184,7 @@ function get_frag($key, $source, $flush_on = array(), $ttl = DAY_IN_SECONDS){
 }
 
 /**
- * Used to output the fragment form returned get_frag()
+ * Used to output the fragment returned from get_frag()
  *
  * @return void
  **/
