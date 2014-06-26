@@ -12,16 +12,15 @@ Version: 1.0
 * fragWP class
 * ************
 *
-* This class provides a framework for caching fragments.
+* This plugin provides a framework for fragment caching.
 * It handles both functions and files as the source of the
-* fragments which makes it useful for both data and template
-* fragments.
+* fragments which makes it useful for caching both data and
+* template parts.
 *
 */
 class fragWP {
     
     function __construct(){
-
 
         /* Set the $this->did_flush_action */
         $this->did_flush_action = array();
@@ -175,7 +174,7 @@ $fragWP = new fragWP();
 
 /**
  * Short hand for $fragWP->get().
- * Takes all parameters fragWP::get() does.
+ * Takes all the parameters fragWP::get() does.
  *
  * @return void
  **/
