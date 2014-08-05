@@ -22,11 +22,14 @@ class fragWP {
     
     function __construct(){
 
+        add_filter('fragWP/cache_prefix', array($this, 'add_user_id_to_prefix'), 1, 1);
+        add_filter('flush_rules_key', array($this, 'add_user_id_to_flush_rules_key'), 1, 1);
+
         /* Set the $this->did_flush_action */
         $this->did_flush_action = array();
 
         /* Save the flush rules in the object */
-        if(!$this->flush_rules = get_transient('fragwp_flush_rules'))
+        if(!$this->flush_rules = get_transient(apply_filters('fragWP/flush_rules_key', 'fragwp_flush_rules')))
             $this->flush_rules = array();
 
         /* Iterate the rules to apply them and do cleanup */
@@ -53,10 +56,6 @@ class fragWP {
                 }
             }
         }
-
-
-        add_filter('fragWP/cache_prefix', array($this, 'add_user_id_to_prefix'), 1, 1);
-        add_filter('flush_rules_key', array($this, 'add_user_id_to_flush_rules_key'), 1, 1);
 
     }
 
@@ -145,6 +144,11 @@ class fragWP {
 
             }
 
+            /* Make sure that the flush rules are setup */
+            if(!is_array($flush_on))
+                $flush_on = array();
+
+            $flush_on[] = 'fragwp/flush';
 
             /* If there are any flush rules, we deal with them here */
             if($flush_on){
