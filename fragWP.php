@@ -56,6 +56,17 @@ class fragWP {
 
     }
 
+    function save_frag($key, $frag, $ttl){
+        if(set_transient($key, $frag, $ttl)){
+            /* Hook action on succesful fragment caching */
+            do_action('fragWP/fragment_cached', $key);
+        }
+    }
+
+    function get_frag($key){
+        return get_transient($key);
+    }
+
     /**
      * This is the main function that is used to retreive a cached function
      * or file.
@@ -67,13 +78,13 @@ class fragWP {
      *
      * @return $frag - the fragment
      **/
-    function get($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array()){
+    function get($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array(), $ob = false){
 
 
         $key  = md5($key.$ttl.serialize($flush_on));
         $key  = apply_filters('fragWP/cache_prefix', 'fragwp_cache_').$key;
 
-        $frag = get_transient($key);
+        $frag = $this->get_frag($key);
 
         if(empty($frag)){
 
@@ -90,26 +101,35 @@ class fragWP {
                 return false;
             }
 
-            /* Start the buffer */
-            ob_start();
-
-            /* Call or require the source */
-            if($source_type == 'callback'){
-                add_action('fragWP/call_source', $source);
-                do_action('fragWP/call_source');
+            if($ob){
+                $GLOBALS['fragwp_key']      = $key;
+                $GLOBALS['fragwp_ttl']      = $ttl;
+                $GLOBALS['fragwp_flush_on'] = $flush_on;
+                error_log('fragWP :: Caching entire output as '.$key);
+                ob_start($source);
             }
             else{
-                require $source;
-            }
-            
-            /* Save buffer output in $frag */
-            $frag = ob_get_clean();
 
-            /* And finally save the output to a transient with the key name */
-            if(set_transient($key, $frag, $ttl)){
-                /* Hook action on succesful fragment caching */
-                do_action('fragWP/fragment_cached', $key);
+                /* Start the buffer */
+                ob_start();
+
+                /* Call or require the source */
+                if($source_type == 'callback'){
+                    add_action('fragWP/call_source', $source);
+                    do_action('fragWP/call_source');
+                }
+                else{
+                    require $source;
+                }
+                
+                /* Save buffer output in $frag */
+                $frag = ob_get_clean();
+
+                /* And finally save the output to a transient with the key name */
+                $this->save_frag($key, $frag, $ttl);
+
             }
+
 
             /* If there are any flush rules, we deal with them here */
             if($flush_on){
@@ -173,6 +193,10 @@ class fragWP {
 /* Instantiate the fragWP object */
 $fragWP = new fragWP();
 
+function fragwp(){
+    global $fragWP;
+    return $fragWP;
+}
 
 /**
  * Short hand for $fragWP->get().
@@ -192,6 +216,11 @@ function get_frag($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array()){
  **/
 function frag($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array()){
     echo get_frag($key, $source, $ttl, $flush_on);
+}
+
+function frag_ob($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array()){
+    global $fragWP;
+    return $fragWP->get($key, $source, $ttl, $flush_on, true);
 }
 
 
