@@ -44,10 +44,12 @@ class fragWP {
             to all the actions neccesary. The method
             determines which fragment keys to flush.
             */
-            foreach($rules['actions'] as $action){
-                if(!in_array($action, $this->did_flush_action)){
-                    add_action($action, array($this, 'flush_fragments'));
-                    $this->did_flush_action[] = $action;
+            if($rules['actions']){
+                foreach($rules['actions'] as $action){
+                    if(!in_array($action, $this->did_flush_action)){
+                        add_action($action, array($this, 'flush_fragments'));
+                        $this->did_flush_action[] = $action;
+                    }
                 }
             }
         }
@@ -68,7 +70,7 @@ class fragWP {
     function get($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array()){
 
 
-        $key  = md5(serialize($source).$key.$ttl.serialize($flush_on));
+        $key  = md5($key.$ttl.serialize($flush_on));
         $key  = apply_filters('fragWP/cache_prefix', 'fragwp_cache_').$key;
 
         $frag = get_transient($key);
@@ -123,7 +125,7 @@ class fragWP {
                 /* Add this rule to the ruleset */
                 $flush_rules[$key]   = array(
                     'actions'   => $flush_on,
-                    'ttl'       => time()+$ttl // <- Timestamp indicating when the rule self-terminates
+                    'ttl'       => time()+((int)$ttl) // <- Timestamp indicating when the rule self-terminates
                     );
 
                 /* And save the ruleset */
@@ -178,9 +180,9 @@ $fragWP = new fragWP();
  *
  * @return void
  **/
-function get_frag($key, $source, $flush_on = array(), $ttl = DAY_IN_SECONDS){
+function get_frag($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array()){
     global $fragWP;
-    return $fragWP->get($key, $source, $flush_on, $ttl);
+    return $fragWP->get($key, $source, $ttl, $flush_on);
 }
 
 /**
@@ -188,8 +190,8 @@ function get_frag($key, $source, $flush_on = array(), $ttl = DAY_IN_SECONDS){
  *
  * @return void
  **/
-function frag($key, $source, $flush_on = array(), $ttl = DAY_IN_SECONDS){
-    echo get_frag($key, $source, $flush_on, $ttl);
+function frag($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array()){
+    echo get_frag($key, $source, $ttl, $flush_on);
 }
 
 
