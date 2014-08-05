@@ -54,6 +54,22 @@ class fragWP {
             }
         }
 
+
+        add_filter('fragWP/cache_prefix', array($this, 'add_user_id_to_prefix'), 1, 1);
+        add_filter('flush_rules_key', array($this, 'add_user_id_to_flush_rules_key'), 1, 1);
+
+    }
+
+    function add_user_id_to_flush_rules($key){
+        if(is_user_logged_in())
+            $key .= get_current_user_id();
+        return $key;
+    }
+
+    function add_user_id_to_prefix($prefix){
+        if(is_user_logged_in())
+            $prefix = 'fragwp'.get_current_user_id();
+        return $prefix;
     }
 
     function save_frag($key, $frag, $ttl){
@@ -79,7 +95,6 @@ class fragWP {
      * @return $frag - the fragment
      **/
     function get($key, $source, $ttl = DAY_IN_SECONDS, $flush_on = array(), $ob = false){
-
 
         $key  = md5($key.$ttl.serialize($flush_on));
         $key  = apply_filters('fragWP/cache_prefix', 'fragwp_cache_').$key;
@@ -135,7 +150,8 @@ class fragWP {
             if($flush_on){
                 
                 /* Get the saved flush rules */
-                if(!$flush_rules = get_transient('fragwp_flush_rules')){
+                $fr_key = apply_filters('fragWP/flush_rules_key', 'fragwp_flush_rules');
+                if(!$flush_rules = get_transient($fr_key)){
                     /*
                     Instantiate a new array if there are no rules
                     or the call returns false */
@@ -149,7 +165,7 @@ class fragWP {
                     );
 
                 /* And save the ruleset */
-                set_transient('fragwp_flush_rules', $flush_rules);
+                set_transient($fr_key, $flush_rules);
 
             }
 
