@@ -3,7 +3,7 @@ fragWP
 
 This class provides a framework for fragment caching in Wordpress. It handles both functions and files as the source of the fragments which makes it useful for caching both data and template parts.
 
-## Usage
+#### Usage
 Output a fragment with a file as the source
 ```
 $template = 'var/www/themes/mytheme/my_fragment.php';
@@ -36,3 +36,10 @@ function do_frag(){
 $ttl = 60*60; // One hour in seconds
 frag('unique_key', 'do_frag', $ttl, array('save_post)));
 ```
+
+####Contribute
+Pull requests are welcome :)
+
+####Practical
+Maintained by [@supertroels](http://www.github.com/supertroels) for [@CPHCloud](http://www.github.com/CPHCloud)
+
